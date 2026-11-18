@@ -15,7 +15,7 @@ import { useStore } from '../store'
 
 type Snapshot = Pick<
   ReturnType<typeof useStore.getState>,
-  'tasks' | 'wtasks' | 'habits' | 'logs' | 'adhkar' | 'tasbeeh' | 'scores' | 'quran' | 'journal'
+  'tasks' | 'wtasks' | 'habits' | 'logs' | 'adhkar' | 'tasbeeh' | 'scores' | 'quran' | 'journal' | 'routines'
 >
 
 type AuthState = {
@@ -30,7 +30,7 @@ const patch = (p: Partial<AuthState>) => useAuth.setState(p)
 
 const snap = (): Snapshot => {
   const s = useStore.getState()
-  return { tasks: s.tasks, wtasks: s.wtasks, habits: s.habits, logs: s.logs, adhkar: s.adhkar, tasbeeh: s.tasbeeh, scores: s.scores, quran: s.quran, journal: s.journal }
+  return { tasks: s.tasks, wtasks: s.wtasks, habits: s.habits, logs: s.logs, adhkar: s.adhkar, tasbeeh: s.tasbeeh, scores: s.scores, quran: s.quran, journal: s.journal, routines: s.routines }
 }
 const ref = (uid: string) => doc(db, 'users', uid, 'state', 'main')
 
@@ -61,7 +61,13 @@ export function merge(local: Snapshot, remote: Partial<Snapshot> | undefined): S
   const lt = local.tasbeeh
   const byDay = { ...(rt?.byDay ?? {}) }
   for (const [d, n] of Object.entries(lt.byDay)) byDay[d] = Math.max(byDay[d] ?? 0, n)
-  const tasbeeh = { ...lt, total: Math.max(lt.total, rt?.total ?? 0), byDay }
+  const perDay: Record<string, Record<string, number>> = { ...(rt?.perDay ?? {}) }
+  for (const [d, m] of Object.entries(lt.perDay ?? {})) {
+    const r = { ...(perDay[d] ?? {}) }
+    for (const [k, n] of Object.entries(m)) r[k] = Math.max(r[k] ?? 0, n)
+    perDay[d] = r
+  }
+  const tasbeeh = { ...lt, total: Math.max(lt.total, rt?.total ?? 0), byDay, perDay }
   const rq = remote.quran
   const lq = local.quran
   const qlog = { ...(rq?.log ?? {}) }
@@ -73,6 +79,7 @@ export function merge(local: Snapshot, remote: Partial<Snapshot> | undefined): S
   for (const [d, e] of Object.entries(local.journal)) if (!journal[d] || e.at >= journal[d].at) journal[d] = e
   return {
     journal,
+    routines: byId(local.routines, remote.routines ?? []),
     quran,
     tasks: byId(local.tasks, remote.tasks ?? []),
     wtasks: byId(local.wtasks, remote.wtasks ?? []),

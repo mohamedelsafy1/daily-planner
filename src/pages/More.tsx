@@ -7,6 +7,8 @@ import Tasbeeh from './Tasbeeh'
 import Games from './Games'
 import Account from './Account'
 import Settings from './Settings'
+import Routines from './Routines'
+import { Repeat as RepeatIcon } from 'lucide-react'
 import { useAuth } from '../lib/sync'
 import { back, go, useNav } from '../lib/router'
 
@@ -100,6 +102,7 @@ export default function More() {
   if (sub === 'time') return <TimeSystems onBack={back} />
   if (sub === 'account') return <Account onBack={back} />
   if (sub === 'settings') return <Settings onBack={back} />
+  if (sub === 'routines') return <Routines onBack={back} />
   if (sub === 'tasbeeh') return <Tasbeeh onBack={back} />
   if (sub === 'calm' || sub === 'brain') return <Games kind={sub} onBack={back} />
 
@@ -138,6 +141,11 @@ export default function More() {
           note="نص المصحف من مصدر رسمي، مع التفسير والاستماع. سيُضاف بعد التأكد من المصدر."
         />
       </div>
+      <Card tone="sage" className="col-span-2" onClick={() => setSub('routines')}>
+        <RepeatIcon size={22} />
+        <h3 className="mt-3 text-sm font-semibold">المهام المتكررة</h3>
+        <p className="mt-1 text-xs leading-relaxed text-ink2">مهام تظهر تلقائيًا كل يوم أو في أيام تختارها.</p>
+      </Card>
       <Card tone="lilac" className="col-span-2" onClick={() => setSub('settings')}>
         <SettingsIcon size={22} />
         <h3 className="mt-3 text-sm font-semibold">الإعدادات</h3>

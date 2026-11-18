@@ -11,7 +11,7 @@ const THEMES: { id: Theme; label: string; Icon: typeof Sun }[] = [
   { id: 'dark', label: 'داكن', Icon: Moon },
 ]
 
-const KEYS = ['tasks', 'wtasks', 'habits', 'logs', 'adhkar', 'tasbeeh', 'scores', 'quran', 'journal'] as const
+const KEYS = ['tasks', 'wtasks', 'habits', 'logs', 'adhkar', 'tasbeeh', 'scores', 'quran', 'journal', 'routines'] as const
 const snapshot = () => {
   const s = useStore.getState()
   return Object.fromEntries(KEYS.map((k) => [k, s[k]]))

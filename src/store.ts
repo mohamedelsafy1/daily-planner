@@ -1,8 +1,10 @@
 import { create } from 'zustand'
 import { persist, createJSONStorage, type StateStorage } from 'zustand/middleware'
+import { addDays, dkey, parseKey } from './lib/date'
 
 export type Energy = 'deep' | 'light'
-export type Task = { id: string; title: string; date: string; done: boolean; energy?: Energy }
+export type Task = { id: string; title: string; date: string; done: boolean; energy?: Energy; routineId?: string }
+export type Routine = { id: string; title: string; days: number[]; energy?: Energy; start: string; synced: string; paused?: boolean }
 export type WTask = { id: string; title: string; week: string; done: boolean }
 export type Group = 'prayer' | 'religion' | 'life'
 export type Habit = { id: string; name: string; group: Group; icon: string }
@@ -10,7 +12,7 @@ export type Logs = Record<string, string[]>
 export type AdhkarKind = 'am' | 'pm'
 export type QuranState = { log: Record<string, number>; goal: { start: string; days: number } | null; pos: number; posAt: number }
 export type Journal = Record<string, { t: string; at: number }>
-export type Tasbeeh = { dhikr: string; count: number; total: number; byDay: Record<string, number> }
+export type Tasbeeh = { dhikr: string; count: number; total: number; byDay: Record<string, number>; perDay?: Record<string, Record<string, number>> }
 
 const uid = () =>
   globalThis.crypto?.randomUUID?.() ?? Math.random().toString(36).slice(2) + Date.now().toString(36)
@@ -67,6 +69,11 @@ type State = {
   scores: Record<string, number>
   quran: QuranState
   journal: Journal
+  routines: Routine[]
+  addRoutine: (title: string, days: number[], start: string, energy?: Energy) => void
+  removeRoutine: (id: string) => void
+  toggleRoutine: (id: string) => void
+  syncRoutines: () => void
   setJournal: (date: string, text: string) => void
   moveUnfinished: (from: string, to: string) => void
   restore: (data: Partial<State>) => void
@@ -102,6 +109,38 @@ export const useStore = create<State>()(
       scores: {},
       quran: { log: {}, goal: null, pos: 0, posAt: 0 },
       journal: {},
+      routines: [],
+      addRoutine: (title, days, start, energy) => {
+        const id = uid()
+        set((s) => ({ routines: [...s.routines, { id, title, days, energy, start, synced: addDays(start, -1) }] }))
+        get().syncRoutines()
+      },
+      removeRoutine: (id) => set((s) => ({ routines: s.routines.filter((r) => r.id !== id) })),
+      toggleRoutine: (id) =>
+        set((s) => ({ routines: s.routines.map((r) => (r.id === id ? { ...r, paused: !r.paused, synced: dkey() } : r)) })),
+      syncRoutines: () =>
+        set((s) => {
+          if (!s.routines.length) return s
+          const today = dkey()
+          const floor = addDays(today, -45)
+          const have = new Set(s.tasks.map((t) => t.id))
+          const add: Task[] = []
+          const routines = s.routines.map((r) => {
+            if (r.synced >= today) return r
+            if (!r.paused) {
+              let d = addDays(r.synced > floor ? r.synced : floor, 1)
+              if (d < r.start) d = r.start
+              for (; d <= today; d = addDays(d, 1)) {
+                const id = `r:${r.id}:${d}`
+                if (r.days.includes(parseKey(d).getDay()) && !have.has(id)) {
+                  add.push({ id, title: r.title, date: d, done: false, energy: r.energy, routineId: r.id })
+                }
+              }
+            }
+            return { ...r, synced: today }
+          })
+          return { routines, tasks: add.length ? [...s.tasks, ...add] : s.tasks }
+        }),
       setJournal: (date, text) =>
         set((s) => {
           const j = { ...s.journal }
@@ -154,6 +193,10 @@ export const useStore = create<State>()(
             count: s.tasbeeh.count + 1,
             total: s.tasbeeh.total + 1,
             byDay: { ...s.tasbeeh.byDay, [date]: (s.tasbeeh.byDay[date] ?? 0) + 1 },
+            perDay: {
+              ...s.tasbeeh.perDay,
+              [date]: { ...s.tasbeeh.perDay?.[date], [s.tasbeeh.dhikr]: (s.tasbeeh.perDay?.[date]?.[s.tasbeeh.dhikr] ?? 0) + 1 },
+            },
           },
         })),
       resetTasbeeh: () => set((s) => ({ tasbeeh: { ...s.tasbeeh, count: 0 } })),

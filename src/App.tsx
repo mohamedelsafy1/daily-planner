@@ -15,6 +15,7 @@ import Adhkar from './pages/Adhkar'
 import Quran from './pages/Quran'
 import Tasbeeh from './pages/Tasbeeh'
 import { Sheet } from './ui'
+import RepeatPicker, { NO_REPEAT, daysOf, type Repeat as RepeatVal } from './components/RepeatPicker'
 import type { Tab } from './nav'
 
 const NAV = [
@@ -48,6 +49,8 @@ const SEGMENTS: Partial<Record<Tab, { id: Tab; label: string }[]>> = {
 function QuickAdd({ open, onClose, date }: { open: boolean; onClose: () => void; date: string }) {
   const addTask = useStore((s) => s.addTask)
   const addWTask = useStore((s) => s.addWTask)
+  const addRoutine = useStore((s) => s.addRoutine)
+  const [rep, setRep] = useState<RepeatVal>(NO_REPEAT)
   const [title, setTitle] = useState('')
   const [scope, setScope] = useState<'day' | 'week'>('day')
   const [energy, setEnergy] = useState<Energy | undefined>()
@@ -55,10 +58,13 @@ function QuickAdd({ open, onClose, date }: { open: boolean; onClose: () => void;
     e.preventDefault()
     const t = title.trim()
     if (!t) return
-    if (scope === 'day') addTask(t, date, energy)
+    const days = daysOf(rep)
+    if (scope === 'day' && days.length) addRoutine(t, days, date, energy)
+    else if (scope === 'day') addTask(t, date, energy)
     else addWTask(t, weekStart(date))
     setTitle('')
     setEnergy(undefined)
+    setRep(NO_REPEAT)
     onClose()
   }
   return (
@@ -100,6 +106,7 @@ function QuickAdd({ open, onClose, date }: { open: boolean; onClose: () => void;
             ))}
           </div>
         )}
+        {scope === 'day' && <RepeatPicker value={rep} onChange={setRep} />}
         <button type="submit" className="mt-4 w-full rounded-2xl bg-ink py-3.5 text-[15px] font-semibold text-white">
           إضافة المهمة
         </button>

@@ -3,6 +3,9 @@ import { Check as CheckMark, ChevronLeft, ChevronRight, Moon, Sun, Trash2 } from
 import { usePrefs } from '../lib/prefs'
 import { ADHKAR } from '../data/adhkar'
 import JournalBox from '../components/JournalBox'
+import RepeatPicker, { NO_REPEAT, daysOf, type Repeat as RepeatVal } from '../components/RepeatPicker'
+import { Repeat as RepeatIcon } from 'lucide-react'
+import { go as goTo } from '../lib/router'
 import { plan } from '../lib/quran'
 import { BookOpen, Moon as MoonIcon, Sunrise } from 'lucide-react'
 import { useStore, type Energy, type Habit } from '../store'
@@ -142,6 +145,7 @@ export default function Today({
   const today = dkey()
   const isToday = date === today
   const [energy, setEnergy] = useState<Energy | undefined>()
+  const [rep, setRep] = useState<RepeatVal>(NO_REPEAT)
 
   const tasks = s.tasks.filter((t) => t.date === date)
   const done = doneSet(s.logs, date)
@@ -201,8 +205,14 @@ export default function Today({
         )}
         <AddRow
           placeholder="مهمة جديدة"
-          onAdd={(title) => s.addTask(title, date, energy)}
+          onAdd={(title) => {
+            const days = daysOf(rep)
+            if (days.length) s.addRoutine(title, days, date, energy)
+            else s.addTask(title, date, energy)
+            setRep(NO_REPEAT)
+          }}
           extra={
+            <>
             <div className="mt-2 flex gap-2" role="group" aria-label="مستوى الطاقة">
               {(Object.keys(ENERGY) as Energy[]).map((k) => (
                 <button
@@ -218,14 +228,22 @@ export default function Today({
                 </button>
               ))}
             </div>
+            <RepeatPicker value={rep} onChange={setRep} />
+            </>
           }
         />
+        {s.routines.length > 0 && (
+          <button onClick={() => goTo('more', 'routines')} className="mt-2 text-xs text-ink2 underline">
+            إدارة المهام المتكررة ({arNum(s.routines.length)})
+          </button>
+        )}
         {tasks.length > 0 && (
           <ul className="mt-2">
             {[...tasks].sort((x, y) => Number(x.done) - Number(y.done)).map((t) => (
               <li key={t.id} className="flex items-center gap-3 py-2.5">
                 <Check done={t.done} label={t.title} onClick={() => s.toggleTask(t.id)} />
                 <span className={`min-w-0 flex-1 text-[15px] ${t.done ? 'text-ink2 line-through' : ''}`}>{t.title}</span>
+                {t.routineId && <RepeatIcon size={13} className="shrink-0 text-ink2" aria-label="متكررة" />}
                 {t.energy && (
                   <span className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] ${ENERGY[t.energy].cls}`}>
                     {ENERGY[t.energy].label}

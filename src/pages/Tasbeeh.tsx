@@ -5,6 +5,7 @@ import Garden from '../components/Garden'
 import Well from '../components/Well'
 import { play } from '../lib/sound'
 import { usePrefs } from '../lib/prefs'
+import { addDays, arNum } from '../lib/date'
 import { dkey } from '../lib/date'
 import { buzz } from '../lib/haptic'
 
@@ -31,6 +32,13 @@ export default function Tasbeeh({ onBack }: { onBack: () => void }) {
   // A finished round stays on screen as a full garden until the next tap.
   const lap = t.count > 0 && t.count % goal === 0 ? goal : t.count % goal
   const laps = Math.floor(t.count / goal)
+  const todayList = Object.entries(t.perDay?.[date] ?? {}).sort((a, b) => b[1] - a[1])
+  const week = Array.from({ length: 7 }, (_, i) => addDays(date, i - 6))
+  const maxWeek = Math.max(10, ...week.map((d) => t.byDay[d] ?? 0))
+  const weekSum = week.reduce((a, d) => a + (t.byDay[d] ?? 0), 0)
+  const active = Object.values(t.byDay).filter((n) => n > 0)
+  const best = active.length ? Math.max(...active) : 0
+  const avg = active.length ? Math.round(active.reduce((a, b) => a + b, 0) / active.length) : 0
   const onGarden = () => {
     const next = t.count + 1
     tap(date)
@@ -117,6 +125,48 @@ export default function Tasbeeh({ onBack }: { onBack: () => void }) {
           <p className="mt-1 text-2xl font-semibold tabular-nums">{t.total}</p>
         </div>
       </div>
+
+      <section className="rounded-[28px] border border-line bg-white p-4">
+        <h2 className="text-[15px] font-semibold">إحصائيات التسبيح</h2>
+        {todayList.length === 0 ? (
+          <p className="mt-2 text-sm text-ink2">لم تسبّح اليوم بعد. أول قطرة تبدأ بها.</p>
+        ) : (
+          <ul className="mt-3 space-y-1.5">
+            {todayList.map(([k, n]) => (
+              <li key={k} className="flex items-center justify-between rounded-2xl bg-mist px-3.5 py-2 text-sm">
+                <span>{k}</span>
+                <b className="tabular-nums">{arNum(n)}</b>
+              </li>
+            ))}
+          </ul>
+        )}
+        <div className="mt-4 flex h-24 items-end gap-2">
+          {week.map((d) => {
+            const n = t.byDay[d] ?? 0
+            return (
+              <div key={d} className="flex flex-1 flex-col items-center gap-1">
+                <span className="text-[10px] tabular-nums text-ink2">{n || ''}</span>
+                <span
+                  className={`w-full rounded-lg ${d === date ? 'bg-lilac-d' : 'bg-lilac'}`}
+                  style={{ height: `${Math.max(4, (n / maxWeek) * 64)}px` }}
+                />
+              </div>
+            )
+          })}
+        </div>
+        <div className="mt-3 grid grid-cols-3 gap-2 text-center">
+          {[
+            ['أفضل يوم', arNum(best)],
+            ['متوسط الأيام النشطة', arNum(avg)],
+            ['آخر ٧ أيام', arNum(weekSum)],
+          ].map(([l, v]) => (
+            <div key={l} className="rounded-2xl bg-mist p-2.5">
+              <p className="text-lg font-semibold tabular-nums">{v}</p>
+              <p className="text-[10px] leading-tight text-ink2">{l}</p>
+            </div>
+          ))}
+        </div>
+      </section>
 
       <button
         onClick={reset}
