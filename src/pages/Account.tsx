@@ -1,4 +1,5 @@
 import { ChevronRight, LogOut, RefreshCw } from 'lucide-react'
+import { Capacitor } from '@capacitor/core'
 import { pullAndMerge, signInGoogle, signOutAll, useAuth } from '../lib/sync'
 
 const ago = (t: number) => (t ? new Date(t).toLocaleTimeString('ar-EG-u-nu-latn', { hour: '2-digit', minute: '2-digit' }) : '—')
@@ -58,6 +59,10 @@ export default function Account({ onBack }: { onBack: () => void }) {
 
       <p className="px-2 text-xs leading-relaxed text-ink2">
         الحفظ تلقائي بعد كل تغيير. إن حذفت عنصرًا على جهاز وفيه نسخة قديمة على جهاز آخر، قد يعود العنصر بعد المزامنة.
+      </p>
+
+      <p className="px-2 text-[10px] text-ink2" dir="ltr">
+        {`platform=${Capacitor.getPlatform()} plugin=${String(Capacitor.isPluginAvailable('FirebaseAuthentication'))} headers=${((window as unknown as { Capacitor?: { PluginHeaders?: { name: string }[] } }).Capacitor?.PluginHeaders ?? []).map((h) => h.name).join(',') || 'none'}`}
       </p>
     </div>
   )
