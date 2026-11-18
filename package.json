@@ -11,9 +11,11 @@
     "build:single": "tsc -b && SINGLE=1 vite build"
   },
   "dependencies": {
+    "@capacitor-firebase/authentication": "^8.6.0",
     "@capacitor/android": "^8.6.2",
     "@capacitor/core": "^8.6.2",
     "@fontsource-variable/readex-pro": "^5.3.0",
+    "firebase": "^12.19.0",
     "lucide-react": "^1.75.0",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",

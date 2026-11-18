@@ -6,6 +6,8 @@ import Timer from './Timer'
 import Adhkar from './Adhkar'
 import Tasbeeh from './Tasbeeh'
 import Games from './Games'
+import Account from './Account'
+import { useAuth } from '../lib/sync'
 
 function Soon({ icon, title, note, tone }: { icon: React.ReactNode; title: string; note: string; tone: Tone }) {
   return (
@@ -91,10 +93,12 @@ function TimeSystems({ onBack }: { onBack: () => void }) {
 }
 
 export default function More() {
-  const [sub, setSub] = useState<'menu' | 'time' | 'adhkar' | 'tasbeeh' | 'calm' | 'brain'>('menu')
+  const [sub, setSub] = useState<'menu' | 'time' | 'adhkar' | 'tasbeeh' | 'calm' | 'brain' | 'account'>('menu')
+  const user = useAuth((s) => s.user)
   const back = () => setSub('menu')
   if (sub === 'time') return <TimeSystems onBack={back} />
   if (sub === 'adhkar') return <Adhkar onBack={back} />
+  if (sub === 'account') return <Account onBack={back} />
   if (sub === 'tasbeeh') return <Tasbeeh onBack={back} />
   if (sub === 'calm' || sub === 'brain') return <Games kind={sub} onBack={back} />
 
@@ -138,18 +142,17 @@ export default function More() {
           note="نص المصحف من مصدر رسمي، مع التفسير والاستماع. سيُضاف بعد التأكد من المصدر."
         />
       </div>
-      <div className="col-span-2">
-        <Soon
-          tone="sand"
-          icon={<Cloud size={22} />}
-          title="الحساب والمزامنة"
-          note="تسجيل الدخول بجيميل وحفظ بياناتك على الإنترنت لاستخدامها على أكثر من جهاز."
-        />
-      </div>
+      <Card tone="sand" className="col-span-2" onClick={() => setSub('account')}>
+        <Cloud size={22} />
+        <h3 className="mt-3 text-sm font-semibold">الحساب والمزامنة</h3>
+        <p className="mt-1 text-xs leading-relaxed text-ink2">
+          {user ? `مسجّل بحساب ${user.email}، وبياناتك تُحفظ على الإنترنت.` : 'سجّل بجيميل لحفظ بياناتك واستخدامها على أكثر من جهاز.'}
+        </p>
+      </Card>
 
       <Card className="col-span-2">
         <p className="text-xs leading-relaxed text-ink2">
-          بياناتك الآن محفوظة على هذا الجهاز فقط. حذف بيانات التطبيق أو إلغاء تثبيته يمسحها.
+          بياناتك محفوظة على هذا الجهاز دائمًا، وتُنسخ إلى حسابك عند تسجيل الدخول.
         </p>
       </Card>
     </div>
