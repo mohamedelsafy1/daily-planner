@@ -51,7 +51,7 @@ export default function Account({ onBack }: { onBack: () => void }) {
       )}
 
       {error && (
-        <p role="alert" className="rounded-2xl bg-rose p-3 text-sm">
+        <p role="alert" className="whitespace-pre-line break-words rounded-2xl bg-rose p-3 text-sm" dir="auto">
           {error}
         </p>
       )}

@@ -137,7 +137,7 @@ export async function signInGoogle() {
     }
   } catch (e) {
     const msg = String((e as { code?: string; message?: string })?.code ?? (e as Error)?.message ?? e)
-    if (!/cancel|closed|popup/i.test(msg)) patch({ error: 'تعذّر تسجيل الدخول. حاول مرة أخرى.' })
+    if (!/cancel|closed-by-user/i.test(msg)) patch({ error: 'تعذّر تسجيل الدخول. حاول مرة أخرى.\nسبب الخطأ: ' + msg.slice(0, 200) })
     console.error(e)
   } finally {
     patch({ busy: false })
