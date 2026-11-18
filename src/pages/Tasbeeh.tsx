@@ -1,5 +1,9 @@
 import { ChevronRight, RotateCcw } from 'lucide-react'
+import { useState } from 'react'
 import { useStore } from '../store'
+import Garden from '../components/Garden'
+import { play } from '../lib/sound'
+import { usePrefs } from '../lib/prefs'
 import { dkey } from '../lib/date'
 import { buzz } from '../lib/haptic'
 
@@ -20,8 +24,24 @@ export default function Tasbeeh({ onBack }: { onBack: () => void }) {
   const pick = useStore((s) => s.setTasbeehDhikr)
   const date = dkey()
   const goal = DHIKR.find((d) => d.t === t.dhikr)?.goal ?? 100
-  const lap = t.count % goal
+  const view = usePrefs((p) => p.tasbeehView)
+  const setPref = usePrefs((p) => p.set)
+  const [celebrate, setCelebrate] = useState(false)
+  // A finished round stays on screen as a full garden until the next tap.
+  const lap = t.count > 0 && t.count % goal === 0 ? goal : t.count % goal
   const laps = Math.floor(t.count / goal)
+  const onGarden = () => {
+    const next = t.count + 1
+    tap(date)
+    const done = next % goal === 0
+    setTimeout(() => play('drop'), 380)
+    if (done) {
+      setTimeout(() => play('done'), 700)
+      setCelebrate(true)
+      setTimeout(() => setCelebrate(false), 2600)
+    }
+    buzz(done ? [20, 50, 20] : 8)
+  }
 
   return (
     <div className="space-y-3">
@@ -46,21 +66,44 @@ export default function Tasbeeh({ onBack }: { onBack: () => void }) {
         ))}
       </div>
 
+      <div className="flex gap-2" role="group" aria-label="طريقة العرض">
+        {([['garden', 'الحديقة'], ['classic', 'السبحة']] as const).map(([k, l]) => (
+          <button
+            key={k}
+            aria-pressed={view === k}
+            data-silent
+            onClick={() => setPref({ tasbeehView: k })}
+            className={`rounded-full px-3.5 py-1.5 text-xs ${view === k ? 'bg-ink text-white' : 'border border-line bg-white'}`}
+          >
+            {l}
+          </button>
+        ))}
+      </div>
+
       <section className="rounded-[28px] bg-lilac p-4 text-center">
         <p className="text-lg font-semibold leading-relaxed">{t.dhikr}</p>
-        <button
-          onClick={() => {
-            tap(date)
-            buzz((t.count + 1) % goal === 0 ? [20, 50, 20] : 8)
-          }}
-          aria-label={`عدّ، العدد ${lap}`}
-          className="mx-auto mt-4 grid size-56 select-none place-items-center rounded-full bg-white shadow-[inset_0_0_0_10px_#EDF1EF] active:scale-[0.98] transition-transform"
-        >
-          <span className="text-6xl font-semibold tabular-nums">{lap}</span>
-        </button>
-        <p className="mt-3 text-sm text-ink2">
-          الدورة {laps + 1} · الهدف {goal}
-        </p>
+        {view === 'garden' ? (
+          <div className="mt-3">
+            <Garden lap={lap} goal={goal} label={`${t.dhikr}، العدد ${lap} من ${goal}. اضغط لتسقط قطرة`} onTap={onGarden} celebrate={celebrate} />
+            <p className="mt-2 text-xs text-ink2">كل تسبيحة قطرة تُحيي الصحراء. الدورة {laps + 1}</p>
+          </div>
+        ) : (
+          <>
+            <button
+              onClick={() => {
+                tap(date)
+                buzz((t.count + 1) % goal === 0 ? [20, 50, 20] : 8)
+              }}
+              aria-label={`عدّ، العدد ${lap}`}
+              className="mx-auto mt-4 grid size-56 select-none place-items-center rounded-full bg-white shadow-[inset_0_0_0_10px_rgb(var(--mist))] active:scale-[0.98] transition-transform"
+            >
+              <span className="text-6xl font-semibold tabular-nums">{t.count % goal}</span>
+            </button>
+            <p className="mt-3 text-sm text-ink2">
+              الدورة {laps + 1} · الهدف {goal}
+            </p>
+          </>
+        )}
       </section>
 
       <div className="grid grid-cols-2 gap-3">

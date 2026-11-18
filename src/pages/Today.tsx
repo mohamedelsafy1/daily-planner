@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { ChevronLeft, ChevronRight, Trash2 } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Moon, Sun, Trash2 } from 'lucide-react'
+import { usePrefs } from '../lib/prefs'
 import { useStore, type Energy, type Habit } from '../store'
 import { addDays, arNum, arPct, dkey, fmtLong, weekStart } from '../lib/date'
 import { doneSet, prayersComplete, streak } from '../lib/stats'
@@ -47,6 +48,9 @@ export default function Today({
   go: (t: Tab) => void
 }) {
   const s = useStore()
+  const theme = usePrefs((p) => p.theme)
+  const setPref = usePrefs((p) => p.set)
+  const isDark = document.documentElement.classList.contains('dark')
   const today = dkey()
   const isToday = date === today
   const [energy, setEnergy] = useState<Energy | undefined>()
@@ -67,7 +71,7 @@ export default function Today({
   const prayerStreak = streak((d) => prayersComplete(s.logs, s.habits, d), today)
 
   return (
-    <div className="grid grid-cols-2 gap-3">
+    <div className="stagger grid grid-cols-2 gap-3">
       <Card className="col-span-2">
         <div className="flex items-center justify-between">
           <div>
@@ -75,6 +79,14 @@ export default function Today({
             <h1 className="text-xl font-semibold leading-tight">{fmtLong(date)}</h1>
           </div>
           <div className="flex gap-1.5">
+            <button
+              aria-label={isDark ? 'الوضع الفاتح' : 'الوضع الداكن'}
+              data-theme={theme}
+              onClick={() => setPref({ theme: isDark ? 'light' : 'dark' })}
+              className="grid size-9 place-items-center rounded-full bg-mist"
+            >
+              {isDark ? <Sun size={17} /> : <Moon size={17} />}
+            </button>
             <button
               aria-label="اليوم السابق"
               onClick={() => setDate(addDays(date, -1))}

@@ -141,7 +141,7 @@ export default function Stats({ setDate, go }: { setDate: (d: string) => void; g
             const Icon = getIcon(h.icon)
             return (
               <div key={h.id} className="flex flex-col items-center gap-1.5">
-                <Ring value={r} size={64} stroke={7} color="#4E8A68">
+                <Ring value={r} size={64} stroke={7} color="rgb(var(--sage-d))">
                   <Icon size={18} className="text-ink2" />
                 </Ring>
                 <span className="max-w-full truncate text-[11px]">{h.name}</span>

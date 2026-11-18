@@ -4,7 +4,11 @@ import '@fontsource-variable/readex-pro'
 import './index.css'
 import App from './App'
 import { initSync } from './lib/sync'
+import { initTheme } from './lib/prefs'
+import { initSound } from './lib/sound'
 
+initTheme()
+initSound()
 initSync()
 
 createRoot(document.getElementById('root')!).render(

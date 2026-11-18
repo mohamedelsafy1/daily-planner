@@ -61,7 +61,7 @@ export function Check({
         done ? 'border-ink bg-ink text-white' : 'border-ink/25 bg-white'
       }`}
     >
-      {done && <CheckIcon size={16} strokeWidth={3} />}
+      {done && <CheckIcon size={16} strokeWidth={3} className="pop" />}
     </button>
   )
 }
@@ -70,8 +70,8 @@ export function Ring({
   value,
   size = 96,
   stroke = 10,
-  color = '#22333A',
-  track = '#EDF1EF',
+  color = 'rgb(var(--ink))',
+  track = 'rgb(var(--mist))',
   children,
 }: {
   value: number
@@ -87,18 +87,17 @@ export function Ring({
   return (
     <div className="relative shrink-0" style={{ width: size, height: size }}>
       <svg width={size} height={size} className="-rotate-90" aria-hidden>
-        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={track} strokeWidth={stroke} />
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" style={{ stroke: track }} strokeWidth={stroke} />
         <circle
           cx={size / 2}
           cy={size / 2}
           r={r}
           fill="none"
-          stroke={color}
           strokeWidth={stroke}
           strokeLinecap="round"
           strokeDasharray={c}
           strokeDashoffset={c * (1 - v)}
-          style={{ transition: 'stroke-dashoffset .5s ease' }}
+          style={{ stroke: color, transition: 'stroke-dashoffset .6s cubic-bezier(.3,.8,.3,1)' }}
         />
       </svg>
       <div className="absolute inset-0 grid place-items-center">{children}</div>
@@ -165,7 +164,7 @@ export function Sheet({
   }, [open, onClose])
   if (!open) return null
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-ink/30" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40" onClick={onClose}>
       <div
         role="dialog"
         aria-modal="true"

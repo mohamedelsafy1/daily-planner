@@ -59,7 +59,7 @@ export default function Week({ setDate, go }: { setDate: (d: string) => void; go
                 className={`flex flex-col items-center gap-1 rounded-2xl py-2 ${isToday ? 'bg-mist' : ''}`}
               >
                 <span className="text-[11px] text-ink2">{fmtNarrow(d)}</span>
-                <Ring value={dayScore(s.logs, s.habits, d)} size={34} stroke={4} color="#4E8A68">
+                <Ring value={dayScore(s.logs, s.habits, d)} size={34} stroke={4} color="rgb(var(--sage-d))">
                   <span className="text-[11px]">{arNum(parseKey(d).getDate())}</span>
                 </Ring>
               </button>

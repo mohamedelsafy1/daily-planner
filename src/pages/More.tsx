@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { BookOpen, ChevronDown, Cloud, Gamepad2, Puzzle, ChevronRight, Timer as TimerIcon, Sparkles, CircleDot } from 'lucide-react'
+import { Settings as SettingsIcon, BookOpen, ChevronDown, Cloud, Gamepad2, Puzzle, ChevronRight, Timer as TimerIcon, Sparkles, CircleDot } from 'lucide-react'
 import { Card, type Tone } from '../ui'
 import { METHODS, type Method } from './methods'
 import Timer from './Timer'
@@ -7,6 +7,7 @@ import Adhkar from './Adhkar'
 import Tasbeeh from './Tasbeeh'
 import Games from './Games'
 import Account from './Account'
+import Settings from './Settings'
 import { useAuth } from '../lib/sync'
 
 function Soon({ icon, title, note, tone }: { icon: React.ReactNode; title: string; note: string; tone: Tone }) {
@@ -93,17 +94,18 @@ function TimeSystems({ onBack }: { onBack: () => void }) {
 }
 
 export default function More() {
-  const [sub, setSub] = useState<'menu' | 'time' | 'adhkar' | 'tasbeeh' | 'calm' | 'brain' | 'account'>('menu')
+  const [sub, setSub] = useState<'menu' | 'time' | 'adhkar' | 'tasbeeh' | 'calm' | 'brain' | 'account' | 'settings'>('menu')
   const user = useAuth((s) => s.user)
   const back = () => setSub('menu')
   if (sub === 'time') return <TimeSystems onBack={back} />
   if (sub === 'adhkar') return <Adhkar onBack={back} />
   if (sub === 'account') return <Account onBack={back} />
+  if (sub === 'settings') return <Settings onBack={back} />
   if (sub === 'tasbeeh') return <Tasbeeh onBack={back} />
   if (sub === 'calm' || sub === 'brain') return <Games kind={sub} onBack={back} />
 
   return (
-    <div className="grid grid-cols-2 gap-3">
+    <div className="stagger grid grid-cols-2 gap-3">
       <h1 className="col-span-2 px-1 text-xl font-semibold">المزيد</h1>
 
       <Card tone="sky" className="col-span-2" onClick={() => setSub('time')}>
@@ -142,6 +144,11 @@ export default function More() {
           note="نص المصحف من مصدر رسمي، مع التفسير والاستماع. سيُضاف بعد التأكد من المصدر."
         />
       </div>
+      <Card tone="lilac" className="col-span-2" onClick={() => setSub('settings')}>
+        <SettingsIcon size={22} />
+        <h3 className="mt-3 text-sm font-semibold">الإعدادات</h3>
+        <p className="mt-1 text-xs leading-relaxed text-ink2">الوضع الداكن والأصوات والاهتزاز.</p>
+      </Card>
       <Card tone="sand" className="col-span-2" onClick={() => setSub('account')}>
         <Cloud size={22} />
         <h3 className="mt-3 text-sm font-semibold">الحساب والمزامنة</h3>
