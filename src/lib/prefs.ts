@@ -2,7 +2,7 @@ import { create } from 'zustand'
 import { persist, createJSONStorage, type StateStorage } from 'zustand/middleware'
 
 export type Theme = 'system' | 'light' | 'dark'
-export type TasbeehView = 'garden' | 'classic'
+export type TasbeehView = 'garden' | 'well' | 'classic'
 
 const safeStorage: StateStorage = {
   getItem: (k) => {

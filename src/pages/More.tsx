@@ -1,14 +1,14 @@
 import { useState } from 'react'
-import { Settings as SettingsIcon, BookOpen, ChevronDown, Cloud, Gamepad2, Puzzle, ChevronRight, Timer as TimerIcon, Sparkles, CircleDot } from 'lucide-react'
+import { Settings as SettingsIcon, BookOpen, ChevronDown, Cloud, Gamepad2, Puzzle, ChevronRight, Timer as TimerIcon, CircleDot } from 'lucide-react'
 import { Card, type Tone } from '../ui'
 import { METHODS, type Method } from './methods'
 import Timer from './Timer'
-import Adhkar from './Adhkar'
 import Tasbeeh from './Tasbeeh'
 import Games from './Games'
 import Account from './Account'
 import Settings from './Settings'
 import { useAuth } from '../lib/sync'
+import { back, go, useNav } from '../lib/router'
 
 function Soon({ icon, title, note, tone }: { icon: React.ReactNode; title: string; note: string; tone: Tone }) {
   return (
@@ -94,11 +94,10 @@ function TimeSystems({ onBack }: { onBack: () => void }) {
 }
 
 export default function More() {
-  const [sub, setSub] = useState<'menu' | 'time' | 'adhkar' | 'tasbeeh' | 'calm' | 'brain' | 'account' | 'settings'>('menu')
+  const sub = useNav((s) => s.sub)
+  const setSub = (x: string) => go('more', x)
   const user = useAuth((s) => s.user)
-  const back = () => setSub('menu')
   if (sub === 'time') return <TimeSystems onBack={back} />
-  if (sub === 'adhkar') return <Adhkar onBack={back} />
   if (sub === 'account') return <Account onBack={back} />
   if (sub === 'settings') return <Settings onBack={back} />
   if (sub === 'tasbeeh') return <Tasbeeh onBack={back} />
@@ -116,12 +115,7 @@ export default function More() {
         </p>
       </Card>
 
-      <Card tone="sand" onClick={() => setSub('adhkar')}>
-        <Sparkles size={22} />
-        <h3 className="mt-3 text-sm font-semibold">أذكار الصباح والمساء</h3>
-        <p className="mt-1 text-xs leading-relaxed text-ink2">مختارة ومختصرة، بفضل كل ذكر ومصدره.</p>
-      </Card>
-      <Card tone="lilac" onClick={() => setSub('tasbeeh')}>
+      <Card tone="lilac" className="col-span-2" onClick={() => setSub('tasbeeh')}>
         <CircleDot size={22} />
         <h3 className="mt-3 text-sm font-semibold">السبحة</h3>
         <p className="mt-1 text-xs leading-relaxed text-ink2">عدّاد باللمس مع اهتزاز عند إتمام كل دورة.</p>

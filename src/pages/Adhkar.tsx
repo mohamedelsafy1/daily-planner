@@ -1,11 +1,12 @@
 import { useMemo, useState } from 'react'
-import { ChevronRight, Check, ChevronDown, RotateCcw, Undo2 } from 'lucide-react'
+import { CircleDot, ChevronRight, Check, ChevronDown, RotateCcw, Undo2 } from 'lucide-react'
 import { useStore, type AdhkarKind } from '../store'
 import { ADHKAR } from '../data/adhkar'
 import { dkey } from '../lib/date'
 import { buzz } from '../lib/haptic'
+import { go } from '../lib/router'
 
-export default function Adhkar({ onBack }: { onBack: () => void }) {
+export default function Adhkar({ onBack }: { onBack?: () => void }) {
   const [kind, setKind] = useState<AdhkarKind>(new Date().getHours() < 15 ? 'am' : 'pm')
   const [fadl, setFadl] = useState<string | null>(null)
   const date = dkey()
@@ -21,10 +22,18 @@ export default function Adhkar({ onBack }: { onBack: () => void }) {
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-2 px-1">
-        <button aria-label="رجوع" onClick={onBack} className="grid size-9 place-items-center rounded-full bg-white">
-          <ChevronRight size={18} />
-        </button>
+        {onBack && (
+          <button aria-label="رجوع" onClick={onBack} className="grid size-9 place-items-center rounded-full bg-white">
+            <ChevronRight size={18} />
+          </button>
+        )}
         <h1 className="text-xl font-semibold">الأذكار</h1>
+        <button
+          onClick={() => go('adhkar', 'tasbeeh')}
+          className="ms-auto flex items-center gap-1.5 rounded-full bg-lilac px-3.5 py-2 text-xs"
+        >
+          <CircleDot size={14} /> السبحة
+        </button>
       </div>
 
       <div role="tablist" className="flex gap-1 rounded-[22px] bg-white p-1 border border-line">

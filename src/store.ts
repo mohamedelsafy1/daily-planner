@@ -8,6 +8,7 @@ export type Group = 'prayer' | 'religion' | 'life'
 export type Habit = { id: string; name: string; group: Group; icon: string }
 export type Logs = Record<string, string[]>
 export type AdhkarKind = 'am' | 'pm'
+export type QuranState = { log: Record<string, number>; goal: { start: string; days: number } | null; pos: number; posAt: number }
 export type Tasbeeh = { dhikr: string; count: number; total: number; byDay: Record<string, number> }
 
 const uid = () =>
@@ -63,6 +64,10 @@ type State = {
   adhkar: Record<string, Record<string, number>> // key: yyyy-mm-dd:am|pm -> dhikr id -> taps so far
   tasbeeh: Tasbeeh
   scores: Record<string, number>
+  quran: QuranState
+  readPages: (date: string, n: number) => void
+  setQuranGoal: (days: number | null, start: string) => void
+  setQuranPos: (page: number) => void
   tapAdhkar: (date: string, kind: AdhkarKind, id: string, needs: Record<string, number>, delta?: number) => void
   resetAdhkar: (date: string, kind: AdhkarKind) => void
   tapTasbeeh: (date: string) => void
@@ -90,6 +95,17 @@ export const useStore = create<State>()(
       adhkar: {},
       tasbeeh: { dhikr: 'سبحان الله', count: 0, total: 0, byDay: {} },
       scores: {},
+      quran: { log: {}, goal: null, pos: 0, posAt: 0 },
+      readPages: (date, n) =>
+        set((s) => {
+          const cur = s.quran.log[date] ?? 0
+          const next = Math.max(0, cur + n)
+          const real = next - cur
+          const pos = Math.max(0, Math.min(604, s.quran.pos + real))
+          return { quran: { ...s.quran, log: { ...s.quran.log, [date]: next }, pos, posAt: Date.now() } }
+        }),
+      setQuranGoal: (days, start) => set((s) => ({ quran: { ...s.quran, goal: days ? { start, days } : null } })),
+      setQuranPos: (page) => set((s) => ({ quran: { ...s.quran, pos: Math.max(0, Math.min(604, Math.round(page) || 0)), posAt: Date.now() } })),
       tapAdhkar: (date, kind, id, needs, delta = 1) =>
         set((s) => {
           const key = `${date}:${kind}`

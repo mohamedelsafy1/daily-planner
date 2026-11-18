@@ -1,6 +1,9 @@
 import { useState } from 'react'
-import { ChevronLeft, ChevronRight, Moon, Sun, Trash2 } from 'lucide-react'
+import { Check as CheckMark, ChevronLeft, ChevronRight, Moon, Sun, Trash2 } from 'lucide-react'
 import { usePrefs } from '../lib/prefs'
+import { ADHKAR } from '../data/adhkar'
+import { plan } from '../lib/quran'
+import { BookOpen, Moon as MoonIcon, Sunrise } from 'lucide-react'
 import { useStore, type Energy, type Habit } from '../store'
 import { addDays, arNum, arPct, dkey, fmtLong, weekStart } from '../lib/date'
 import { doneSet, prayersComplete, streak } from '../lib/stats'
@@ -38,6 +41,90 @@ function HabitChip({ h, on, onClick }: { h: Habit; on: boolean; onClick: () => v
   )
 }
 
+function Journey({ date, go, done, isToday }: { date: string; go: (t: Tab) => void; done: Set<string>; isToday: boolean }) {
+  const adhkar = useStore((s) => s.adhkar)
+  const quran = useStore((s) => s.quran)
+  const hour = new Date().getHours()
+  const frac = (kind: 'am' | 'pm') => {
+    const prog = adhkar[`${date}:${kind}`] ?? {}
+    const items = ADHKAR[kind]
+    const total = items.reduce((a, i) => a + i.count, 0)
+    return items.reduce((a, i) => a + Math.min(prog[i.id] ?? 0, i.count), 0) / total
+  }
+  const pl = plan(quran.log, quran.goal, date)
+  const readToday = quran.log[date] ?? 0
+  const quranDone = pl ? pl.todayLeft === 0 : readToday >= 5
+  const quranSub = pl
+    ? pl.finished
+      ? 'أتممت الختمة'
+      : pl.todayLeft > 0
+        ? `باقي ${arNum(pl.todayLeft)} صفحة من ${arNum(pl.target)}`
+        : `أتممت ${arNum(pl.target)} صفحة`
+    : readToday > 0
+      ? `قرأت ${arNum(readToday)} صفحة`
+      : 'ابدأ ورد اليوم أو تحدّي ختمة'
+
+  const steps = [
+    {
+      id: 'am',
+      to: 'adhkar' as Tab,
+      title: 'أذكار الصباح',
+      sub: done.has('adhkar-am') ? 'تمّت' : frac('am') > 0 ? `${arNum(Math.round(frac('am') * 100))}% منها` : 'حصنك لبقية اليوم',
+      Icon: Sunrise,
+      ok: done.has('adhkar-am'),
+      ready: true,
+    },
+    { id: 'quran', to: 'quran' as Tab, title: 'ورد القرآن', sub: quranSub, Icon: BookOpen, ok: quranDone, ready: true },
+    {
+      id: 'pm',
+      to: 'adhkar' as Tab,
+      title: 'أذكار المساء',
+      sub: done.has('adhkar-pm') ? 'تمّت' : hour < 15 ? 'تبدأ بعد العصر' : frac('pm') > 0 ? `${arNum(Math.round(frac('pm') * 100))}% منها` : 'اختم يومك بالذكر',
+      Icon: MoonIcon,
+      ok: done.has('adhkar-pm'),
+      ready: hour >= 15 || !isToday,
+    },
+  ]
+  const current = isToday ? steps.find((x) => !x.ok && x.ready) : undefined
+  const left = steps.filter((x) => x.ok).length
+
+  return (
+    <Card className="col-span-2" tone="sand">
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-xs text-ink2">{isToday ? greeting() : 'يوم سابق'}</p>
+          <h2 className="text-lg font-semibold">{current ? 'خطوتك التالية' : left === 3 ? 'أتممت رحلة يومك' : 'رحلة اليوم'}</h2>
+        </div>
+        <span className="rounded-full bg-white/70 px-3 py-1 text-xs tabular-nums">{left} / 3</span>
+      </div>
+      <ul className="mt-3 space-y-2">
+        {steps.map((st) => {
+          const on = current?.id === st.id
+          return (
+            <li key={st.id}>
+              <button
+                onClick={() => go(st.to)}
+                className={`flex w-full items-center gap-3 rounded-2xl p-3 text-start ${
+                  on ? 'bg-ink text-white shadow-md' : 'bg-white/70'
+                } ${st.ok ? 'opacity-70' : ''}`}
+              >
+                <span className={`grid size-10 shrink-0 place-items-center rounded-full ${on ? 'bg-white/15' : 'bg-white'}`}>
+                  {st.ok ? <CheckMark size={18} strokeWidth={3} /> : <st.Icon size={18} />}
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className={`block text-sm font-semibold ${st.ok ? 'line-through' : ''}`}>{st.title}</span>
+                  <span className={`block truncate text-xs ${on ? 'text-white/75' : 'text-ink2'}`}>{st.sub}</span>
+                </span>
+                {on && <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-ink">ابدأ</span>}
+              </button>
+            </li>
+          )
+        })}
+      </ul>
+    </Card>
+  )
+}
+
 export default function Today({
   date,
   setDate,
@@ -72,10 +159,10 @@ export default function Today({
 
   return (
     <div className="stagger grid grid-cols-2 gap-3">
+      <Journey date={date} go={go} done={done} isToday={isToday} />
       <Card className="col-span-2">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-xs text-ink2">{isToday ? greeting() : 'يوم سابق'}</p>
             <h1 className="text-xl font-semibold leading-tight">{fmtLong(date)}</h1>
           </div>
           <div className="flex gap-1.5">

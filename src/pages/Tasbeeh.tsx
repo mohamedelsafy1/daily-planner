@@ -2,6 +2,7 @@ import { ChevronRight, RotateCcw } from 'lucide-react'
 import { useState } from 'react'
 import { useStore } from '../store'
 import Garden from '../components/Garden'
+import Well from '../components/Well'
 import { play } from '../lib/sound'
 import { usePrefs } from '../lib/prefs'
 import { dkey } from '../lib/date'
@@ -67,7 +68,7 @@ export default function Tasbeeh({ onBack }: { onBack: () => void }) {
       </div>
 
       <div className="flex gap-2" role="group" aria-label="طريقة العرض">
-        {([['garden', 'الحديقة'], ['classic', 'السبحة']] as const).map(([k, l]) => (
+        {([['garden', 'الحديقة'], ['well', 'البئر'], ['classic', 'السبحة']] as const).map(([k, l]) => (
           <button
             key={k}
             aria-pressed={view === k}
@@ -82,9 +83,9 @@ export default function Tasbeeh({ onBack }: { onBack: () => void }) {
 
       <section className="rounded-[28px] bg-lilac p-4 text-center">
         <p className="text-lg font-semibold leading-relaxed">{t.dhikr}</p>
-        {view === 'garden' ? (
+        {view !== 'classic' ? (
           <div className="mt-3">
-            <Garden lap={lap} goal={goal} label={`${t.dhikr}، العدد ${lap} من ${goal}. اضغط لتسقط قطرة`} onTap={onGarden} celebrate={celebrate} />
+            {view === 'garden' ? <Garden lap={lap} goal={goal} label={`${t.dhikr}، العدد ${lap} من ${goal}. اضغط لتسقط قطرة`} onTap={onGarden} celebrate={celebrate} /> : <Well lap={lap} goal={goal} label={`${t.dhikr}، العدد ${lap} من ${goal}. اضغط لتسقط قطرة`} onTap={onGarden} celebrate={celebrate} />}
             <p className="mt-2 text-xs text-ink2">كل تسبيحة قطرة تُحيي الصحراء. الدورة {laps + 1}</p>
           </div>
         ) : (
