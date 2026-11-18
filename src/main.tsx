@@ -6,9 +6,10 @@ import App from './App'
 import { initSync } from './lib/sync'
 import { initTheme } from './lib/prefs'
 import { initSound } from './lib/sound'
-import { initRouter } from './lib/router'
+import { initNativeBack, initRouter } from './lib/router'
 
 initRouter()
+void initNativeBack()
 initTheme()
 initSound()
 initSync()

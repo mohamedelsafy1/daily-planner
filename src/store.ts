@@ -9,6 +9,7 @@ export type Habit = { id: string; name: string; group: Group; icon: string }
 export type Logs = Record<string, string[]>
 export type AdhkarKind = 'am' | 'pm'
 export type QuranState = { log: Record<string, number>; goal: { start: string; days: number } | null; pos: number; posAt: number }
+export type Journal = Record<string, { t: string; at: number }>
 export type Tasbeeh = { dhikr: string; count: number; total: number; byDay: Record<string, number> }
 
 const uid = () =>
@@ -65,6 +66,10 @@ type State = {
   tasbeeh: Tasbeeh
   scores: Record<string, number>
   quran: QuranState
+  journal: Journal
+  setJournal: (date: string, text: string) => void
+  moveUnfinished: (from: string, to: string) => void
+  restore: (data: Partial<State>) => void
   readPages: (date: string, n: number) => void
   setQuranGoal: (days: number | null, start: string) => void
   setQuranPos: (page: number) => void
@@ -96,6 +101,17 @@ export const useStore = create<State>()(
       tasbeeh: { dhikr: 'سبحان الله', count: 0, total: 0, byDay: {} },
       scores: {},
       quran: { log: {}, goal: null, pos: 0, posAt: 0 },
+      journal: {},
+      setJournal: (date, text) =>
+        set((s) => {
+          const j = { ...s.journal }
+          if (text.trim()) j[date] = { t: text, at: Date.now() }
+          else delete j[date]
+          return { journal: j }
+        }),
+      moveUnfinished: (from, to) =>
+        set((s) => ({ tasks: s.tasks.map((t) => (t.date === from && !t.done ? { ...t, date: to } : t)) })),
+      restore: (data) => set(data),
       readPages: (date, n) =>
         set((s) => {
           const cur = s.quran.log[date] ?? 0

@@ -15,7 +15,7 @@ import { useStore } from '../store'
 
 type Snapshot = Pick<
   ReturnType<typeof useStore.getState>,
-  'tasks' | 'wtasks' | 'habits' | 'logs' | 'adhkar' | 'tasbeeh' | 'scores' | 'quran'
+  'tasks' | 'wtasks' | 'habits' | 'logs' | 'adhkar' | 'tasbeeh' | 'scores' | 'quran' | 'journal'
 >
 
 type AuthState = {
@@ -30,7 +30,7 @@ const patch = (p: Partial<AuthState>) => useAuth.setState(p)
 
 const snap = (): Snapshot => {
   const s = useStore.getState()
-  return { tasks: s.tasks, wtasks: s.wtasks, habits: s.habits, logs: s.logs, adhkar: s.adhkar, tasbeeh: s.tasbeeh, scores: s.scores, quran: s.quran }
+  return { tasks: s.tasks, wtasks: s.wtasks, habits: s.habits, logs: s.logs, adhkar: s.adhkar, tasbeeh: s.tasbeeh, scores: s.scores, quran: s.quran, journal: s.journal }
 }
 const ref = (uid: string) => doc(db, 'users', uid, 'state', 'main')
 
@@ -69,7 +69,10 @@ export function merge(local: Snapshot, remote: Partial<Snapshot> | undefined): S
   const newerPos = !rq || lq.posAt >= rq.posAt ? lq : rq
   const goal = !rq?.goal ? lq.goal : !lq.goal ? rq.goal : lq.goal.start >= rq.goal.start ? lq.goal : rq.goal
   const quran = { log: qlog, goal, pos: newerPos.pos, posAt: newerPos.posAt }
+  const journal = { ...(remote.journal ?? {}) }
+  for (const [d, e] of Object.entries(local.journal)) if (!journal[d] || e.at >= journal[d].at) journal[d] = e
   return {
+    journal,
     quran,
     tasks: byId(local.tasks, remote.tasks ?? []),
     wtasks: byId(local.wtasks, remote.wtasks ?? []),

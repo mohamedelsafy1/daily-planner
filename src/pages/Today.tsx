@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Check as CheckMark, ChevronLeft, ChevronRight, Moon, Sun, Trash2 } from 'lucide-react'
 import { usePrefs } from '../lib/prefs'
 import { ADHKAR } from '../data/adhkar'
+import JournalBox from '../components/JournalBox'
 import { plan } from '../lib/quran'
 import { BookOpen, Moon as MoonIcon, Sunrise } from 'lucide-react'
 import { useStore, type Energy, type Habit } from '../store'
@@ -152,6 +153,8 @@ export default function Today({
   const finished = tasks.filter((t) => t.done).length + s.habits.filter((h) => done.has(h.id)).length
   const pct = total ? finished / total : 0
 
+  const yesterday = addDays(today, -1)
+  const carry = s.tasks.filter((t) => t.date === yesterday && !t.done).length
   const ws = weekStart(date)
   const wk = s.wtasks.filter((t) => t.week === ws)
   const wkDone = wk.filter((t) => t.done).length
@@ -160,6 +163,88 @@ export default function Today({
   return (
     <div className="stagger grid grid-cols-2 gap-3">
       <Journey date={date} go={go} done={done} isToday={isToday} />
+      <Card className="col-span-2">
+        <div className="flex items-end justify-between">
+          <div>
+            <h2 className="text-lg font-semibold">مهام اليوم</h2>
+            <p className="mt-0.5 text-xs text-ink2">
+              {tasks.length === 0
+                ? 'أضف ما يجب أن ينتهي اليوم'
+                : tasks.every((t) => t.done)
+                  ? 'أنجزت كل مهامك، بارك الله في جهدك'
+                  : `باقي ${arNum(tasks.filter((t) => !t.done).length)} من ${arNum(tasks.length)}`}
+            </p>
+          </div>
+          {tasks.length > 0 && (
+            <span className="text-2xl font-semibold tabular-nums">
+              {arNum(tasks.filter((t) => t.done).length)}
+              <span className="text-sm text-ink2">/{arNum(tasks.length)}</span>
+            </span>
+          )}
+        </div>
+        {tasks.length > 0 && (
+          <div className="mt-3 h-2 overflow-hidden rounded-full bg-mist">
+            <div
+              className="h-full rounded-full bg-sage-d transition-all duration-500"
+              style={{ width: `${(tasks.filter((t) => t.done).length / tasks.length) * 100}%` }}
+            />
+          </div>
+        )}
+        {isToday && carry > 0 && (
+          <button
+            onClick={() => s.moveUnfinished(yesterday, date)}
+            className="mt-3 flex w-full items-center justify-between rounded-2xl bg-sand px-4 py-2.5 text-sm"
+          >
+            <span>{arNum(carry)} {carry === 1 ? 'مهمة لم تُنجز' : 'مهام لم تُنجز'} أمس</span>
+            <span className="rounded-full bg-white/70 px-3 py-1 text-xs font-semibold">انقلها لليوم</span>
+          </button>
+        )}
+        <AddRow
+          placeholder="مهمة جديدة"
+          onAdd={(title) => s.addTask(title, date, energy)}
+          extra={
+            <div className="mt-2 flex gap-2" role="group" aria-label="مستوى الطاقة">
+              {(Object.keys(ENERGY) as Energy[]).map((k) => (
+                <button
+                  type="button"
+                  key={k}
+                  aria-pressed={energy === k}
+                  onClick={() => setEnergy(energy === k ? undefined : k)}
+                  className={`rounded-full px-3 py-1 text-xs transition-colors ${
+                    energy === k ? `${ENERGY[k].cls} ring-2 ring-ink/30` : 'bg-mist text-ink2'
+                  }`}
+                >
+                  {ENERGY[k].label}
+                </button>
+              ))}
+            </div>
+          }
+        />
+        {tasks.length > 0 && (
+          <ul className="mt-2">
+            {[...tasks].sort((x, y) => Number(x.done) - Number(y.done)).map((t) => (
+              <li key={t.id} className="flex items-center gap-3 py-2.5">
+                <Check done={t.done} label={t.title} onClick={() => s.toggleTask(t.id)} />
+                <span className={`min-w-0 flex-1 text-[15px] ${t.done ? 'text-ink2 line-through' : ''}`}>{t.title}</span>
+                {t.energy && (
+                  <span className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] ${ENERGY[t.energy].cls}`}>
+                    {ENERGY[t.energy].label}
+                  </span>
+                )}
+                <button aria-label={`حذف ${t.title}`} onClick={() => s.removeTask(t.id)}>
+                  <Trash2 size={16} className="text-ink2/60" />
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </Card>
+
+      <Card className="col-span-2">
+        <Title aside="تُحفظ تلقائيًا">مذكرات اليوم</Title>
+        <JournalBox date={date} rows={3} />
+      </Card>
+
       <Card className="col-span-2">
         <div className="flex items-center justify-between">
           <div>
@@ -255,55 +340,6 @@ export default function Today({
             style={{ width: `${wk.length ? (wkDone / wk.length) * 100 : 0}%` }}
           />
         </div>
-      </Card>
-
-      <Card className="col-span-2">
-        <Title aside={tasks.length ? `${arNum(tasks.filter((t) => t.done).length)}/${arNum(tasks.length)}` : undefined}>
-          مهام اليوم
-        </Title>
-        {tasks.length === 0 ? (
-          <Empty>لا توجد مهام لهذا اليوم. أضف أول مهمة بالأسفل.</Empty>
-        ) : (
-          <ul>
-            {tasks.map((t) => (
-              <li key={t.id} className="flex items-center gap-3 py-2">
-                <Check done={t.done} label={t.title} onClick={() => s.toggleTask(t.id)} />
-                <span className={`min-w-0 flex-1 text-sm ${t.done ? 'text-ink2 line-through' : ''}`}>
-                  {t.title}
-                </span>
-                {t.energy && (
-                  <span className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] ${ENERGY[t.energy].cls}`}>
-                    {ENERGY[t.energy].label}
-                  </span>
-                )}
-                <button aria-label={`حذف ${t.title}`} onClick={() => s.removeTask(t.id)}>
-                  <Trash2 size={16} className="text-ink2/60" />
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
-        <AddRow
-          placeholder="مهمة جديدة"
-          onAdd={(title) => s.addTask(title, date, energy)}
-          extra={
-            <div className="mt-2 flex gap-2" role="group" aria-label="مستوى الطاقة">
-              {(Object.keys(ENERGY) as Energy[]).map((k) => (
-                <button
-                  type="button"
-                  key={k}
-                  aria-pressed={energy === k}
-                  onClick={() => setEnergy(energy === k ? undefined : k)}
-                  className={`rounded-full px-3 py-1 text-xs transition-colors ${
-                    energy === k ? `${ENERGY[k].cls} ring-2 ring-ink/30` : 'bg-mist text-ink2'
-                  }`}
-                >
-                  {ENERGY[k].label}
-                </button>
-              ))}
-            </div>
-          }
-        />
       </Card>
 
       <Card tone="sand" className="col-span-2">

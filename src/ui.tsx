@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react'
 import { Check as CheckIcon, Plus, X } from 'lucide-react'
+import { pushOverlay } from './lib/router'
 
 export type Tone = 'white' | 'sage' | 'sky' | 'sand' | 'rose' | 'lilac'
 
@@ -156,6 +157,12 @@ export function Sheet({
   title: string
   children: ReactNode
 }) {
+  useEffect(() => {
+    if (!open) return
+    const release = pushOverlay(onClose)
+    return release
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open])
   useEffect(() => {
     if (!open) return
     const h = (e: KeyboardEvent) => e.key === 'Escape' && onClose()

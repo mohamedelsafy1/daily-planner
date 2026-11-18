@@ -7,6 +7,7 @@ import { useStore, type Energy } from './store'
 import Splash from './components/Splash'
 import Today from './pages/Today'
 import Week from './pages/Week'
+import Month from './pages/Month'
 import Habits from './pages/Habits'
 import Stats from './pages/Stats'
 import More from './pages/More'
@@ -17,22 +18,23 @@ import { Sheet } from './ui'
 import type { Tab } from './nav'
 
 const NAV = [
-  { id: 'today', label: 'اليوم', Icon: House, group: ['today', 'week'] },
+  { id: 'today', label: 'اليوم', Icon: House, group: ['today', 'week', 'month'] },
   { id: 'adhkar', label: 'الأذكار', Icon: Sparkles, group: ['adhkar'] },
   { id: 'quran', label: 'القرآن', Icon: BookOpen, group: ['quran'] },
   { id: 'habits', label: 'العادات', Icon: Repeat, group: ['habits', 'stats'] },
   { id: 'more', label: 'المزيد', Icon: Grid2x2, group: ['more'] },
 ] as const
 
+const DAY_SEG: { id: Tab; label: string }[] = [
+  { id: 'today', label: 'اليوم' },
+  { id: 'week', label: 'الأسبوع' },
+  { id: 'month', label: 'الشهر' },
+]
+
 const SEGMENTS: Partial<Record<Tab, { id: Tab; label: string }[]>> = {
-  today: [
-    { id: 'today', label: 'اليوم' },
-    { id: 'week', label: 'الأسبوع' },
-  ],
-  week: [
-    { id: 'today', label: 'اليوم' },
-    { id: 'week', label: 'الأسبوع' },
-  ],
+  today: DAY_SEG,
+  week: DAY_SEG,
+  month: DAY_SEG,
   habits: [
     { id: 'habits', label: 'العادات' },
     { id: 'stats', label: 'الإحصاء' },
@@ -142,6 +144,7 @@ export default function App() {
           >
             {tab === 'today' && <Today date={date} setDate={setDate} go={go} />}
             {tab === 'week' && <Week setDate={setDate} go={go} />}
+            {tab === 'month' && <Month />}
             {tab === 'habits' && <Habits />}
             {tab === 'stats' && <Stats setDate={setDate} go={go} />}
             {tab === 'adhkar' && (sub === 'tasbeeh' ? <Tasbeeh onBack={back} /> : <Adhkar />)}
