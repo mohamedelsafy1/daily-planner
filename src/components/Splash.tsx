@@ -57,6 +57,14 @@ export default function Splash() {
             </h1>
             <p className="mt-1 text-sm text-ink2">رتّب يومك، واصنع عاداتك</p>
           </motion.div>
+          <motion.p
+            className="absolute bottom-10 text-xs text-ink2"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 1.3, duration: 0.5 }}
+          >
+            تطوير <span className="font-semibold text-ink">محمد الصافي</span>
+          </motion.p>
         </motion.div>
       )}
     </AnimatePresence>

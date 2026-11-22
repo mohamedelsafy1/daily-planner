@@ -164,6 +164,13 @@ export default function More() {
           بياناتك محفوظة على هذا الجهاز دائمًا، وتُنسخ إلى حسابك عند تسجيل الدخول.
         </p>
       </Card>
+
+      <div className="col-span-2 mt-2 flex flex-col items-center gap-1.5 py-6 text-center">
+        <span className="h-px w-16 bg-line" aria-hidden />
+        <p className="mt-3 text-xs text-ink2">صُمّم وطُوّر بواسطة</p>
+        <p className="text-base font-semibold text-ink">محمد الصافي</p>
+        <p className="text-xs text-ink2">لا تنسوه من صالح دعائكم 🤲</p>
+      </div>
     </div>
   )
 }
