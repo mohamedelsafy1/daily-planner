@@ -10,5 +10,14 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    <script>
+      window.goatcounter = {
+        path: function () {
+          var c = window.Capacitor, apk = (c && c.isNativePlatform && c.isNativePlatform()) || /; wv\)/.test(navigator.userAgent)
+          return apk ? '/apk' : (matchMedia('(display-mode: standalone)').matches ? '/installed-web' : '/web')
+        },
+      }
+    </script>
+    <script data-goatcounter="https://dailyplanner-safy.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
   </body>
 </html>
